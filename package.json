@@ -9,7 +9,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "socket.io": "^4.5.0"
+    "socket.io": "^4.5.0",
+    "express":"*",
+    "body-parser":"*"
   },
   "devDependencies": {
     "nodemon": "^2.0.16"
