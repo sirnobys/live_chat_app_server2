@@ -21,17 +21,17 @@ var con = mysql.createConnection({
   password: "3b220325",
   database: 'heroku_9390bfdc44d4566'
 });
-
-// con.connect(function(err) {
-//   if (err) {
-//     return console.error('error: ' + err.message);
-//   }
-
-//   console.log('Connected to the MySQL server.');
-// });
+var x=""
+con.connect(function(err) {
+  if (err) {
+    return console.error('error: ' + err.message);
+  }
+  x="connected"
+  console.log('Connected to the MySQL server.');
+});
 
 app.use('/',(req,res)=>{
-    res.send(JSON.stringify([{"key":"value"}]))
+    res.send(JSON.stringify([{"key":x}]))
 })
 
 io.on("connection", (socket) => {
