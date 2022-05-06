@@ -3,6 +3,7 @@ const app = express();
 const http = require("http");
 const cors = require("cors");
 const { Server } = require("socket.io");
+const mysql = require('mysql');
 app.use(cors());
 
 const server = http.createServer(app);
@@ -12,6 +13,21 @@ const io = new Server(server, {
     origin: "*",
     methods: ["GET", "POST"],
   },
+});
+
+var connection  = mysql.createConnection({
+  host: "us-cdbr-east-05.cleardb.net",
+  user: "b8d01d88271309",
+  password: "3b220325",
+  database: 'heroku_9390bfdc44d4566'
+});
+
+connection.connect((err)=> {
+  if (err) {
+    return console.error('error: ' + err.message);
+  }
+
+  console.log('Connected to the MySQL server.');
 });
 
 app.use('/',(req,res)=>{
