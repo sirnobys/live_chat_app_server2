@@ -31,7 +31,11 @@ con.connect(function(err) {
 });
 
 app.use('/',(req,res)=>{
-    res.send(JSON.stringify([{"key":x}]))
+  con.query("SELECT * FROM user", function (err, result, fields) {
+    if (err) throw err;
+    console.log(result);
+    res.send(JSON.stringify([{"key":result}]))
+  });
 })
 
 io.on("connection", (socket) => {
