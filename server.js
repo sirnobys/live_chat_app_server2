@@ -15,20 +15,13 @@ const io = new Server(server, {
   },
 });
 
-var connection  = mysql.createConnection({
+var con = mysql.createConnection({
   host: "us-cdbr-east-05.cleardb.net",
   user: "b8d01d88271309",
   password: "3b220325",
   database: 'heroku_9390bfdc44d4566'
 });
 
-connection.connect((err)=> {
-  if (err) {
-    return console.error('error: ' + err.message);
-  }
-
-  console.log('Connected to the MySQL server.');
-});
 
 app.use('/',(req,res)=>{
     res.send(JSON.stringify([{"key":"value"}]))
