@@ -47,7 +47,7 @@ app.use('/', (req, res) => {
     if (err) throw err;
     messages = result
   });
-  res.send(JSON.stringify({ data: { messages: messages, block: block, users: users } }))
+  res.send(JSON.stringify( {messages: messages, block: block, users: users}))
 })
 
 io.on("connection", (socket) => {
