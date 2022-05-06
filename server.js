@@ -21,21 +21,31 @@ var con = mysql.createConnection({
   password: "3b220325",
   database: 'heroku_9390bfdc44d4566'
 });
-var x=""
 con.connect(function(err) {
   if (err) {
     return console.error('error: ' + err.message);
   }
-  x="connected"
   console.log('Connected to the MySQL server.');
 });
-
+let messages=[]
+let block=[]
+let users=[]
 app.use('/',(req,res)=>{
-  con.query("SELECT * FROM user", function (err, result, fields) {
+  con.query("SELECT * FROM user",  (err, result, fields)=> {
     if (err) throw err;
-    console.log(result);
-    res.send(JSON.stringify([{"key":result}]))
+   users = result
   });
+
+  con.query("SELECT * FROM block",  (err, result, fields)=> {
+    if (err) throw err;
+    block = result
+  });
+
+  con.query("SELECT * FROM message",  (err, result, fields)=> {
+    if (err) throw err;
+    messages = result
+  });
+  res.send(JSON.stringify({data:{messages:messages, block:block, users:users }}))
 })
 
 io.on("connection", (socket) => {
