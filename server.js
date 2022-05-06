@@ -22,15 +22,16 @@ var connection  = mysql.createConnection({
   database: 'heroku_9390bfdc44d4566'
 });
 
-connection.connect((err)=> {
-  if (err) {
-    return console.error('error: ' + err.message);
-  }
 
-  console.log('Connected to the MySQL server.');
-});
 
 app.use('/',(req,res)=>{
+  connection.connect((err)=> {
+    if (err) {
+      return console.error('error: ' + err.message);
+    }
+  
+    console.log('Connected to the MySQL server.');
+  });
     res.send(JSON.stringify([{"key":"value"}]))
 })
 
