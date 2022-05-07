@@ -33,31 +33,7 @@ let block = []
 let users = []
 let active_users = {}
 
-function handleDisconnect() {
-  connection = mysql.createConnection(db_config); // Recreate the connection, since
-                                                  // the old one cannot be reused.
-
-  connection.connect(function(err) {              // The server is either down
-    if(err) {                                     // or restarting (takes a while sometimes).
-      console.log('error when connecting to db:', err);
-      setTimeout(handleDisconnect, 2000); // We introduce a delay before attempting to reconnect,
-    }                                     // to avoid a hot loop, and to allow our node script to
-  });                                     // process asynchronous requests in the meantime.
-                                          // If you're also serving http, display a 503 error.
-  connection.on('error', function(err) {
-    console.log('db error', err);
-    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
-      handleDisconnect();                         // lost due to either server restart, or a
-    } else {                                      // connnection idle timeout (the wait_timeout
-      throw err;                                  // server variable configures this)
-    }
-  });
-}
-
-handleDisconnect();
-
-  
-app.use('/', (req, res) => {
+const fetch=()=>{
   con.query("SELECT * FROM user", (err, result, fields) => {
     if (err) throw err;
     users = result
@@ -66,41 +42,71 @@ app.use('/', (req, res) => {
   con.query("SELECT * FROM block", (err, result, fields) => {
     if (err) throw err;
     block = result
+    console.log(fields);
   });
 
   con.query("SELECT * FROM message", (err, result, fields) => {
     if (err) throw err;
     messages = result
   });
-  res.send(JSON.stringify( {messages: messages, block: block, users: users}))
-})
+
+}
+
 
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
-
+  socket.on("fetch", () => {
+    fetch()
+    socket.emit('fetched',{messages, block, users})
+  })
   socket.on("activate_user", (data) => {
     
     active_users[data['email']] = data
-    socket.emit("user_activated", data)
+    socket.emit("user_activated", active_users)
     let sql = 'SELECT * FROM user WHERE email = ?';
-    let result =[]
-
     con.query(sql, [data['email']],  (err, result)=> {
       if (err) throw err;
-      result = result
+      if(result.length<1){
+        sql = 'INSERT INTO user (name, email, picture) VALUES (?,?,?)';
+        con.query(sql, [data['name'],data['email'],data['picture']],  (err, result)=> {
+          if (err) throw err;
+          console.log('inserted successfully');
+        });
+      }
     });
-
-    if(result.length<1){
-      sql = 'INSERT INTO user (name, email, picture) VALUES (?,?,?)';
-      con.query(sql, [data['name'],data['email'],data['picture']],  (err, result)=> {
-        if (err) throw err;
-        console.log('inserted succesfully');
-      });
-    }
   });
 
   socket.on("send_message", (data) => {
-    socket.emit("receive_message", data);
+    messages.push(data)
+    socket.emit("message_sent", messages);
+    sql = 'INSERT INTO message (room, sender, receiver,time,message) VALUES (?,?,?,?,?)';
+        con.query(sql, [data['room'], data['sender'], data['receiver'], data['sent'], data['message']],  (err, result)=> {
+          if (err) throw err;
+          console.log('inserted message successfully');
+        });
+  });
+
+  socket.on("block_user", (data) => {
+    socket.emit('user_blocked',data)
+    sql = 'INSERT into block (blocked_user, user) value (?,?)';
+        con.query(sql, [data['blocked_user'], data['user']],  (err, result)=> {
+          if (err) throw err;
+          console.log('inserted block successfully');
+        });
+  });
+
+  socket.on("unblock_user", (data) => {
+    socket.emit('user_unblocked',data)
+    sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
+        con.query(sql, [data['blocked_user'], data['user']],  (err, result)=> {
+          if (err) throw err;
+          console.log('deleted block successfully');
+        });
+  });
+
+  socket.on("deactivate_user", (data) => {
+    delete active_users[data["emeail"]]
+    socket.emit('user_deactivated',data)
   });
 
   socket.on("disconnect", () => {
