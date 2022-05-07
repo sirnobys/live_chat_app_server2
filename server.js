@@ -12,12 +12,7 @@ const io = new Server(server, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
-    serveClient: false,
-      origins: '*:*',
-      transports: ['polling'],
-      pingInterval: 10000,
-      pingTimeout: 5000,
-      cookie: false
+    transports: ['polling'],
   },
 });
 db_config ={
