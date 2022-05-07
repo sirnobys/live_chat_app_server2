@@ -7,7 +7,11 @@ const mysql = require('mysql');
 app.use(cors());
 
 const server = http.createServer(app);
-
+app.all('/', function (request, response, next) {
+  response.header("Access-Control-Allow-Origin", "*");
+  response.header("Access-Control-Allow-Headers", "X-Requested-With");
+  next();
+});
 const io = new Server(server, {
   cors: {
     origin: "*",
