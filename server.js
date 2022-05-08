@@ -78,12 +78,12 @@ io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
   socket.on("fetch", () => {
     fetch()
-    socket.broadcast.emit('fetched', { messages, block, users })
+    socket.emit('fetched', { messages, block, users })
   })
   socket.on("activate_user", (data) => {
 
     active_users[data['email']] = data
-    socket.broadcast.emit("user_activated", active_users)
+    socket.emit("user_activated", active_users)
     let sql = 'SELECT * FROM user WHERE email = ?';
     con.query(sql, [data['email']], (err, result) => {
       if (err) throw err;
@@ -99,7 +99,7 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", (data) => {
     messages.push(data)
-    socket.broadcast.emit("message_sent", messages);
+    socket.emit("message_sent", messages);
     let sql = 'INSERT INTO message (room, sender, receiver,time,message) VALUES (?,?,?,?,?)';
     con.query(sql, [data['room'], data['sender'], data['receiver'], data['sent'], data['message']], (err, result) => {
       if (err) throw err;
@@ -111,7 +111,7 @@ io.on("connection", (socket) => {
     if(!(block.some(e=>e.user==data.user && e.blocked_user == data.blocked_user))){
       block.push(data)
     }
-    socket.broadcast.emit('user_blocked', block)
+    socket.emit('user_blocked', block)
     let sql = "SELECT * FROM block WHERE blocked_user=? AND user=?"
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
@@ -128,7 +128,7 @@ io.on("connection", (socket) => {
 
   socket.on("unblock_user", (data) => {
     block = block.filter(e=>!(e.user==data.user && e.blocked_user == data.blocked_user))
-    socket.broadcast.emit('user_unblocked', block)
+    socket.emit('user_unblocked', block)
     let sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
@@ -138,7 +138,7 @@ io.on("connection", (socket) => {
 
   socket.on("deactivate_user", (data) => {
     delete active_users[data["emeail"]]
-    socket.broadcast.emit('user_deactivated', data)
+    socket.emit('user_deactivated', data)
   });
 
   socket.on("disconnect", () => {
