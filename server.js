@@ -56,7 +56,7 @@ app.use('/', (req, res) => {
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
   socket.on("fetch", () => {
-    fetch()
+    // fetch()
     socket.emit('fetched',{messages, block, users})
   })
   socket.on("activate_user", (data) => {
