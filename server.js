@@ -14,7 +14,7 @@ const io = new Server(server, {
     methods: ["GET", "POST"],
   },
 });
-db_config ={
+db_config = {
   host: "us-cdbr-east-05.cleardb.net",
   user: "b8d01d88271309",
   password: "3b220325",
@@ -23,18 +23,18 @@ db_config ={
 var con = mysql.createConnection(db_config);
 function handleDisconnect() {
   con = mysql.createConnection(db_config); // Recreate the connection, since
-                                                  // the old one cannot be reused.
+  // the old one cannot be reused.
 
-  con.connect(function(err) {              // The server is either down
-    if(err) {                                     // or restarting (takes a while sometimes).
+  con.connect(function (err) {              // The server is either down
+    if (err) {                                     // or restarting (takes a while sometimes).
       console.log('error when connecting to db:', err);
       setTimeout(handleDisconnect, 2000); // We introduce a delay before attempting to reconnect,
     }                                     // to avoid a hot loop, and to allow our node script to
   });                                     // process asynchronous requests in the meantime.
-                                          // If you're also serving http, display a 503 error.
-  con.on('error', function(err) {
+  // If you're also serving http, display a 503 error.
+  con.on('error', function (err) {
     console.log('db error', err);
-    if(err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') { // Connection to the MySQL server is usually
       handleDisconnect();                         // lost due to either server restart, or a
     } else {                                      // connnection idle timeout (the wait_timeout
       throw err;                                  // server variable configures this)
@@ -55,7 +55,7 @@ let block = []
 let users = []
 let active_users = {}
 
-const fetch=()=>{
+const fetch = () => {
   con.query("SELECT * FROM user", (err, result, fields) => {
     if (err) throw err;
     users = result
@@ -78,18 +78,18 @@ io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
   socket.on("fetch", () => {
     fetch()
-    socket.emit('fetched',{messages, block, users})
+    socket.emit('fetched', { messages, block, users })
   })
   socket.on("activate_user", (data) => {
-    
+
     active_users[data['email']] = data
     socket.emit("user_activated", active_users)
     let sql = 'SELECT * FROM user WHERE email = ?';
-    con.query(sql, [data['email']],  (err, result)=> {
+    con.query(sql, [data['email']], (err, result) => {
       if (err) throw err;
-      if(result.length<1){
+      if (result.length < 1) {
         sql = 'INSERT INTO user (name, email, picture) VALUES (?,?,?)';
-        con.query(sql, [data['name'],data['email'],data['picture']],  (err, result)=> {
+        con.query(sql, [data['name'], data['email'], data['picture']], (err, result) => {
           if (err) throw err;
           console.log('inserted successfully');
         });
@@ -100,34 +100,41 @@ io.on("connection", (socket) => {
   socket.on("send_message", (data) => {
     messages.push(data)
     socket.emit("message_sent", messages);
-    sql = 'INSERT INTO message (room, sender, receiver,time,message) VALUES (?,?,?,?,?)';
-        con.query(sql, [data['room'], data['sender'], data['receiver'], data['sent'], data['message']],  (err, result)=> {
-          if (err) throw err;
-          console.log('inserted message successfully');
-        });
+    let sql = 'INSERT INTO message (room, sender, receiver,time,message) VALUES (?,?,?,?,?)';
+    con.query(sql, [data['room'], data['sender'], data['receiver'], data['sent'], data['message']], (err, result) => {
+      if (err) throw err;
+      console.log('inserted message successfully');
+    });
   });
 
   socket.on("block_user", (data) => {
-    socket.emit('user_blocked',data)
-    sql = 'INSERT into block (blocked_user, user) value (?,?)';
-        con.query(sql, [data['blocked_user'], data['user']],  (err, result)=> {
+    socket.emit('user_blocked', data)
+    let sql = "SELECT * FROM block WHERE blocked_user=? AND user=?"
+    con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
+      if (err) throw err;
+      if (result.length < 1) {
+        sql = 'INSERT into block (blocked_user, user) value (?,?)';
+        con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
           if (err) throw err;
           console.log('inserted block successfully');
         });
+      }
+    });
+
   });
 
   socket.on("unblock_user", (data) => {
-    socket.emit('user_unblocked',data)
-    sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
-        con.query(sql, [data['blocked_user'], data['user']],  (err, result)=> {
-          if (err) throw err;
-          console.log('deleted block successfully');
-        });
+    socket.emit('user_unblocked', data)
+    let sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
+    con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
+      if (err) throw err;
+      console.log('deleted block successfully');
+    });
   });
 
   socket.on("deactivate_user", (data) => {
     delete active_users[data["emeail"]]
-    socket.emit('user_deactivated',data)
+    socket.emit('user_deactivated', data)
   });
 
   socket.on("disconnect", () => {
