@@ -71,6 +71,7 @@ const fetch = () => {
     if (err) throw err;
     messages = result
   });
+
 }
 
 io.on("connection", (socket) => {
@@ -108,8 +109,6 @@ io.on("connection", (socket) => {
 
   socket.on("block_user", (data) => {
     socket.emit('user_blocked', data)
-    fetch()
-    socket.emit('fetched', { messages, block, users })
     let sql = "SELECT * FROM block WHERE blocked_user=? AND user=?"
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
@@ -126,8 +125,6 @@ io.on("connection", (socket) => {
 
   socket.on("unblock_user", (data) => {
     socket.emit('user_unblocked', data)
-    fetch()
-    socket.emit('fetched', { messages, block, users })
     let sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
