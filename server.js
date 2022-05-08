@@ -109,6 +109,10 @@ io.on("connection", (socket) => {
 
   socket.on("block_user", (data) => {
     socket.emit('user_blocked', data)
+    if(!(block.some(e=>e.user==data.user && e.blocked_user == data.blocked_user))){
+      block.push(data)
+    }
+    socket.emit('fetched', messages,block,users)
     let sql = "SELECT * FROM block WHERE blocked_user=? AND user=?"
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
@@ -124,7 +128,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("unblock_user", (data) => {
+    block = block.filter(e=>!(e.user==data.user && e.blocked_user == data.blocked_user))
     socket.emit('user_unblocked', data)
+    socket.emit('fetched', messages,block,users)
     let sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
