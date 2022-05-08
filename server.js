@@ -65,7 +65,7 @@ const fetch = () => {
     if (err) throw err;
     block = result
     console.log(fields);
-  }); 
+  });
 
   con.query("SELECT * FROM message", (err, result, fields) => {
     if (err) throw err;
