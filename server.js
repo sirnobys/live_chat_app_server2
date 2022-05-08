@@ -71,7 +71,6 @@ const fetch = () => {
     if (err) throw err;
     messages = result
   });
-
 }
 
 io.on("connection", (socket) => {
