@@ -7,11 +7,25 @@ const mysql = require('mysql');
 app.use(cors());
 
 const server = http.createServer(app);
-app.all('/', function (request, response, next) {
-  response.header("Access-Control-Allow-Origin", "*");
-  response.header("Access-Control-Allow-Headers", "X-Requested-With");
-  next();
-});
+  
+app.use('/', (req, res) => {
+  con.query("SELECT * FROM user", (err, result, fields) => {
+    if (err) throw err;
+    users = result
+  });
+
+  con.query("SELECT * FROM block", (err, result, fields) => {
+    if (err) throw err;
+    block = result
+  });
+
+  con.query("SELECT * FROM message", (err, result, fields) => {
+    if (err) throw err;
+    messages = result
+  });
+  res.send(JSON.stringify( {messages: messages, block: block, users: users}))
+})
+
 const io = new Server(server, {
   cors: {
     origin: "*",
