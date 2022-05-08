@@ -55,9 +55,7 @@ let block = []
 let users = []
 let active_users = {}
 
-
-  
-app.use('/', (req, res) => {
+const fetch=()=>{
   con.query("SELECT * FROM user", (err, result, fields) => {
     if (err) throw err;
     users = result
@@ -66,19 +64,20 @@ app.use('/', (req, res) => {
   con.query("SELECT * FROM block", (err, result, fields) => {
     if (err) throw err;
     block = result
+    console.log(fields);
   });
 
   con.query("SELECT * FROM message", (err, result, fields) => {
     if (err) throw err;
     messages = result
   });
-  res.send(JSON.stringify( {messages: messages, block: block, users: users}))
-})
+
+}
 
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
   socket.on("fetch", () => {
-    // fetch()
+    fetch()
     socket.emit('fetched',{messages, block, users})
   })
   socket.on("activate_user", (data) => {
