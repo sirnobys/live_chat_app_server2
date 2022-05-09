@@ -74,6 +74,8 @@ const fetch = () => {
 
 }
 
+const activate_user=()=>{}
+
 io.on("connection", (socket) => {
   console.log(`User Connected: ${socket.id}`);
   socket.on("fetch", () => {
@@ -99,7 +101,7 @@ io.on("connection", (socket) => {
 
   socket.on("send_message", (data) => {
     messages.push(data)
-    socket.emit("message_sent", messages);
+    io.emit("message_sent", messages);
     let sql = 'INSERT INTO message (room, sender, receiver,time,message) VALUES (?,?,?,?,?)';
     con.query(sql, [data['room'], data['sender'], data['receiver'], data['sent'], data['message']], (err, result) => {
       if (err) throw err;
@@ -111,7 +113,7 @@ io.on("connection", (socket) => {
     if(!(block.some(e=>e.user==data.user && e.blocked_user == data.blocked_user))){
       block.push(data)
     }
-    socket.emit('user_blocked', block)
+    io.emit('user_blocked', block)
     let sql = "SELECT * FROM block WHERE blocked_user=? AND user=?"
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
@@ -128,7 +130,7 @@ io.on("connection", (socket) => {
 
   socket.on("unblock_user", (data) => {
     block = block.filter(e=>!(e.user==data.user && e.blocked_user == data.blocked_user))
-    socket.emit('user_unblocked', block)
+    io.emit('user_unblocked', block)
     let sql = 'DELETE FROM block WHERE blocked_user=? AND user=?';
     con.query(sql, [data['blocked_user'], data['user']], (err, result) => {
       if (err) throw err;
